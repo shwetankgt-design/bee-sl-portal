@@ -161,6 +161,98 @@ export const AI_INSIGHTS = [
   "214 pending approvals are concentrated in the refrigerator category — avg. review time 6.8 days.",
 ];
 
+// -------------------- Registration tracker --------------------
+
+export interface TrackedApplication {
+  id: string;
+  product: string;
+  category: string;
+  submitted: string;
+  status: "Submitted" | "Under Review" | "Approved" | "Rejected";
+  reviewer: string;
+}
+
+export const TRACKED_APPLICATIONS: TrackedApplication[] = [
+  { id: "APP-2026-00891", product: "Split AC 1.5 Ton Inverter", category: "Air Conditioner", submitted: "02-Oct-2026", status: "Under Review", reviewer: "R. Sharma" },
+  { id: "APP-2026-00847", product: "Double Door Refrigerator 320L", category: "Refrigerator", submitted: "18-Sep-2026", status: "Approved", reviewer: "A. Nair" },
+  { id: "APP-2026-00902", product: "Front Load Washing Machine 7kg", category: "Washing Machine", submitted: "10-Oct-2026", status: "Submitted", reviewer: "Unassigned" },
+  { id: "APP-2026-00765", product: "Ceiling Fan 1200mm BLDC", category: "Ceiling Fan", submitted: "25-Aug-2026", status: "Rejected", reviewer: "S. Iyer" },
+  { id: "APP-2026-00878", product: "Storage Water Heater 25L", category: "Water Heater", submitted: "29-Sep-2026", status: "Under Review", reviewer: "R. Sharma" },
+  { id: "APP-2026-00730", product: "Split AC 1 Ton Inverter", category: "Air Conditioner", submitted: "12-Aug-2026", status: "Approved", reviewer: "A. Nair" },
+];
+
+// -------------------- Dashboard filters --------------------
+
+export const DASHBOARD_STATES = ["All States", "Maharashtra", "Gujarat", "Tamil Nadu", "Karnataka", "Uttar Pradesh", "Delhi", "Telangana", "West Bengal"];
+
+export interface NonCompliantEntry {
+  manufacturer: string;
+  category: string;
+  violations: number;
+  complianceScore: number;
+  state: string;
+}
+
+export const TOP_NON_COMPLIANT: NonCompliantEntry[] = [
+  { manufacturer: "Zenova Appliances Pvt. Ltd.", category: "Ceiling Fan", violations: 7, complianceScore: 41, state: "Uttar Pradesh" },
+  { manufacturer: "Arctic Breeze Electronics", category: "Air Conditioner", violations: 5, complianceScore: 52, state: "Delhi" },
+  { manufacturer: "HomeCool Industries", category: "Refrigerator", violations: 4, complianceScore: 58, state: "Gujarat" },
+  { manufacturer: "Suresh Electricals", category: "Water Heater", violations: 3, complianceScore: 63, state: "Tamil Nadu" },
+  { manufacturer: "Vortex Home Appliances", category: "Washing Machine", violations: 3, complianceScore: 65, state: "Maharashtra" },
+];
+
+// State-wise registration data used by the Dashboard state filter (extends STATE_REGISTRATIONS above with a trend breakdown).
+export const STATE_QUARTERLY: Record<string, { quarter: string; registrations: number }[]> = {
+  Maharashtra: [
+    { quarter: "Q1 2026", registrations: 310 },
+    { quarter: "Q2 2026", registrations: 365 },
+    { quarter: "Q3 2026", registrations: 398 },
+    { quarter: "Q4 2026", registrations: 347 },
+  ],
+  Gujarat: [
+    { quarter: "Q1 2026", registrations: 260 },
+    { quarter: "Q2 2026", registrations: 300 },
+    { quarter: "Q3 2026", registrations: 340 },
+    { quarter: "Q4 2026", registrations: 280 },
+  ],
+  "Tamil Nadu": [
+    { quarter: "Q1 2026", registrations: 230 },
+    { quarter: "Q2 2026", registrations: 265 },
+    { quarter: "Q3 2026", registrations: 300 },
+    { quarter: "Q4 2026", registrations: 255 },
+  ],
+  Karnataka: [
+    { quarter: "Q1 2026", registrations: 205 },
+    { quarter: "Q2 2026", registrations: 230 },
+    { quarter: "Q3 2026", registrations: 270 },
+    { quarter: "Q4 2026", registrations: 235 },
+  ],
+  "Uttar Pradesh": [
+    { quarter: "Q1 2026", registrations: 190 },
+    { quarter: "Q2 2026", registrations: 210 },
+    { quarter: "Q3 2026", registrations: 245 },
+    { quarter: "Q4 2026", registrations: 215 },
+  ],
+  Delhi: [
+    { quarter: "Q1 2026", registrations: 155 },
+    { quarter: "Q2 2026", registrations: 175 },
+    { quarter: "Q3 2026", registrations: 205 },
+    { quarter: "Q4 2026", registrations: 175 },
+  ],
+  Telangana: [
+    { quarter: "Q1 2026", registrations: 140 },
+    { quarter: "Q2 2026", registrations: 160 },
+    { quarter: "Q3 2026", registrations: 180 },
+    { quarter: "Q4 2026", registrations: 160 },
+  ],
+  "West Bengal": [
+    { quarter: "Q1 2026", registrations: 110 },
+    { quarter: "Q2 2026", registrations: 130 },
+    { quarter: "Q3 2026", registrations: 145 },
+    { quarter: "Q4 2026", registrations: 135 },
+  ],
+};
+
 // -------------------- Grievance chatbot module --------------------
 
 export interface ChatMessage {

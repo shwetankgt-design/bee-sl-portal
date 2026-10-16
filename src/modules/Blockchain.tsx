@@ -1,10 +1,21 @@
 import { useState } from "react";
-import { ShieldCheck, Loader2, CheckCircle2, Blocks } from "lucide-react";
+import { ShieldCheck, Loader2, CheckCircle2, Blocks, Search, XCircle } from "lucide-react";
 import { CERTIFICATE_RECORD, CHAIN_OF_CUSTODY } from "../data/mockData";
 
 export default function Blockchain() {
   const [status, setStatus] = useState<"idle" | "verifying" | "verified">("idle");
   const [confirmedCount, setConfirmedCount] = useState(0);
+  const [query, setQuery] = useState("");
+  const [lookupResult, setLookupResult] = useState<"none" | "found" | "not-found">("none");
+
+  function runLookup() {
+    const q = query.trim().toLowerCase();
+    if (!q) return;
+    const match =
+      CERTIFICATE_RECORD.certificateHash.toLowerCase().includes(q) ||
+      CERTIFICATE_RECORD.shortHash.toLowerCase().includes(q);
+    setLookupResult(match ? "found" : "not-found");
+  }
 
   function verify() {
     setStatus("verifying");
@@ -25,6 +36,35 @@ export default function Blockchain() {
       <div>
         <h1 className="text-xl font-bold text-ink">Blockchain Certificate Verification</h1>
         <p className="subtle">Certificates are anchored on a permissioned ledger for tamper-proof verification.</p>
+      </div>
+
+      <div className="card card-pad">
+        <div className="flex items-center gap-2 mb-3">
+          <Search size={16} className="text-gt-purple" />
+          <h2 className="section-title">Certificate Hash Lookup</h2>
+        </div>
+        <div className="flex items-center gap-2 mb-2">
+          <input
+            className="input"
+            placeholder="Enter certificate hash or number (e.g. BEE-2026-001245)"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setLookupResult("none"); }}
+            onKeyDown={(e) => e.key === "Enter" && runLookup()}
+          />
+          <button className="btn-ghost shrink-0" onClick={runLookup}>
+            <Search size={14} /> Search
+          </button>
+        </div>
+        {lookupResult === "found" && (
+          <div className="flex items-center gap-2 text-xs font-medium text-good bg-good/10 rounded-lg px-3 py-2 spark-fade">
+            <CheckCircle2 size={14} /> Match found on ledger — certificate {CERTIFICATE_RECORD.shortHash} is valid and anchored at block #10452.
+          </div>
+        )}
+        {lookupResult === "not-found" && (
+          <div className="flex items-center gap-2 text-xs font-medium text-bad bg-bad/10 rounded-lg px-3 py-2 spark-fade">
+            <XCircle size={14} /> No matching certificate found on the ledger for this query.
+          </div>
+        )}
       </div>
 
       <div className="card card-pad">

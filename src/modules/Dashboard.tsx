@@ -14,8 +14,18 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { Sparkles, TrendingUp, TrendingDown, Factory, Boxes, Clock, Tags, RefreshCw, XCircle } from "lucide-react";
-import { STATE_REGISTRATIONS, QUARTERLY_TREND, CATEGORY_SPLIT, CATEGORY_COLORS, KPI_TILES, AI_INSIGHTS } from "../data/mockData";
+import { Sparkles, TrendingUp, TrendingDown, Factory, Boxes, Clock, Tags, RefreshCw, XCircle, AlertOctagon, MapPin } from "lucide-react";
+import {
+  STATE_REGISTRATIONS,
+  QUARTERLY_TREND,
+  CATEGORY_SPLIT,
+  CATEGORY_COLORS,
+  KPI_TILES,
+  AI_INSIGHTS,
+  DASHBOARD_STATES,
+  STATE_QUARTERLY,
+  TOP_NON_COMPLIANT,
+} from "../data/mockData";
 
 const ICONS = [Factory, Boxes, Clock, Tags, RefreshCw, XCircle];
 
@@ -55,11 +65,30 @@ function KpiTile({ label, value, trend, up, Icon }: { label: string; value: numb
 }
 
 export default function Dashboard() {
+  const [selectedState, setSelectedState] = useState(DASHBOARD_STATES[0]);
+
+  const trendData = selectedState === "All States" ? QUARTERLY_TREND : STATE_QUARTERLY[selectedState] ?? QUARTERLY_TREND;
+  const nonCompliant = selectedState === "All States" ? TOP_NON_COMPLIANT : TOP_NON_COMPLIANT.filter((n) => n.state === selectedState);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-ink">AI-Powered Dashboard</h1>
-        <p className="subtle">Live MIS &amp; analytics across the BEE S&amp;L registration lifecycle.</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-ink">AI-Powered Dashboard</h1>
+          <p className="subtle">Live MIS &amp; analytics across the BEE S&amp;L registration lifecycle.</p>
+        </div>
+        <div className="flex items-center gap-2 bg-white border border-border rounded-lg px-3 py-2">
+          <MapPin size={15} className="text-gt-purple shrink-0" />
+          <select
+            className="text-sm font-medium text-ink bg-transparent focus:outline-none cursor-pointer"
+            value={selectedState}
+            onChange={(e) => setSelectedState(e.target.value)}
+          >
+            {DASHBOARD_STATES.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -100,9 +129,9 @@ export default function Dashboard() {
         </div>
 
         <div className="card card-pad">
-          <h2 className="section-title mb-3">Quarterly Registration Trend</h2>
+          <h2 className="section-title mb-3">Quarterly Registration Trend{selectedState !== "All States" ? ` — ${selectedState}` : ""}</h2>
           <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={QUARTERLY_TREND} margin={{ left: -10 }}>
+            <AreaChart data={trendData} margin={{ left: -10 }}>
               <defs>
                 <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#00A9A5" stopOpacity={0.35} />
@@ -132,6 +161,53 @@ export default function Dashboard() {
             </PieChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      <div className="card card-pad">
+        <div className="flex items-center gap-2 mb-3">
+          <AlertOctagon size={16} className="text-bad" />
+          <h2 className="section-title">Top Non-Compliant Manufacturers{selectedState !== "All States" ? ` — ${selectedState}` : ""}</h2>
+        </div>
+        {nonCompliant.length === 0 ? (
+          <div className="text-sm text-muted text-center py-6">No non-compliance records for {selectedState}.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-[11px] text-muted border-b border-border">
+                  <th className="py-2 pr-3">Manufacturer</th>
+                  <th className="py-2 pr-3">Category</th>
+                  <th className="py-2 pr-3">State</th>
+                  <th className="py-2 pr-3">Violations</th>
+                  <th className="py-2">Compliance Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {nonCompliant.map((n) => (
+                  <tr key={n.manufacturer} className="border-b border-border/60 last:border-0">
+                    <td className="py-2.5 pr-3 font-medium text-ink">{n.manufacturer}</td>
+                    <td className="py-2.5 pr-3 text-muted">{n.category}</td>
+                    <td className="py-2.5 pr-3 text-muted">{n.state}</td>
+                    <td className="py-2.5 pr-3">
+                      <span className="pill bg-bad/10 text-bad">{n.violations}</span>
+                    </td>
+                    <td className="py-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-24 rounded-full bg-border overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${n.complianceScore < 50 ? "bg-bad" : n.complianceScore < 70 ? "bg-warn" : "bg-good"}`}
+                            style={{ width: `${n.complianceScore}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-semibold text-ink">{n.complianceScore}</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,11 +1,107 @@
 import { useState, type DragEvent } from "react";
-import { LogIn, Building2, Package, UploadCloud, CheckCircle2, FileText } from "lucide-react";
-import { DEMO_CREDENTIALS, buildStatusTimeline, generateApplicationId } from "../data/mockData";
+import { LogIn, Building2, Package, UploadCloud, CheckCircle2, FileText, ClipboardList, FileSignature, Clock, Search, XCircle } from "lucide-react";
+import { DEMO_CREDENTIALS, buildStatusTimeline, generateApplicationId, TRACKED_APPLICATIONS, type TrackedApplication } from "../data/mockData";
 
 type Stage = "login" | "form" | "success";
+type Tab = "new" | "tracker";
+
+const TRACKER_STATUS_STYLES: Record<TrackedApplication["status"], { bg: string; text: string; Icon: typeof Clock }> = {
+  Submitted: { bg: "bg-muted/10", text: "text-muted", Icon: FileSignature },
+  "Under Review": { bg: "bg-gt-teal/10", text: "text-gt-teal-dark", Icon: Search },
+  Approved: { bg: "bg-good/10", text: "text-good", Icon: CheckCircle2 },
+  Rejected: { bg: "bg-bad/10", text: "text-bad", Icon: XCircle },
+};
+
+const TRACKER_FILTERS: Array<TrackedApplication["status"] | "All"> = ["All", "Submitted", "Under Review", "Approved", "Rejected"];
+
+function ApplicationTracker() {
+  const [filter, setFilter] = useState<TrackedApplication["status"] | "All">("All");
+  const [selected, setSelected] = useState<TrackedApplication | null>(null);
+
+  const filtered = filter === "All" ? TRACKED_APPLICATIONS : TRACKED_APPLICATIONS.filter((a) => a.status === filter);
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-4">
+      <div className="card card-pad">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h2 className="section-title">Application Tracker</h2>
+          <div className="flex gap-1.5 flex-wrap">
+            {TRACKER_FILTERS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`text-[11px] font-medium rounded-full px-2.5 py-1 border transition-colors ${
+                  filter === f ? "bg-gt-purple text-white border-gt-purple" : "border-border text-muted hover:border-gt-purple-light"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-2">
+          {filtered.map((a) => {
+            const style = TRACKER_STATUS_STYLES[a.status];
+            return (
+              <button
+                key={a.id}
+                onClick={() => setSelected(a)}
+                className={`w-full text-left rounded-lg border px-3 py-2.5 flex items-center gap-3 transition-colors ${
+                  selected?.id === a.id ? "border-gt-purple bg-gt-purple/5" : "border-border hover:border-gt-purple-light"
+                }`}
+              >
+                <div className={`w-8 h-8 rounded-lg grid place-items-center shrink-0 ${style.bg} ${style.text}`}>
+                  <style.Icon size={14} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm text-ink">{a.id}</span>
+                    <span className={`pill ${style.bg} ${style.text}`}>{a.status}</span>
+                  </div>
+                  <div className="text-xs text-muted truncate">{a.product} &middot; {a.category}</div>
+                </div>
+                <div className="text-[11px] text-muted shrink-0">{a.submitted}</div>
+              </button>
+            );
+          })}
+          {filtered.length === 0 && <div className="text-sm text-muted text-center py-6">No applications in this status.</div>}
+        </div>
+      </div>
+
+      {selected && (
+        <div className="card card-pad spark-fade">
+          <h2 className="section-title mb-3">Application Detail — {selected.id}</h2>
+          <div className="space-y-1.5 text-sm">
+            <div className="flex justify-between border-b border-border/60 pb-1.5">
+              <span className="text-muted">Product</span>
+              <span className="font-medium text-ink">{selected.product}</span>
+            </div>
+            <div className="flex justify-between border-b border-border/60 pb-1.5">
+              <span className="text-muted">Category</span>
+              <span className="font-medium text-ink">{selected.category}</span>
+            </div>
+            <div className="flex justify-between border-b border-border/60 pb-1.5">
+              <span className="text-muted">Status</span>
+              <span className="font-medium text-ink">{selected.status}</span>
+            </div>
+            <div className="flex justify-between border-b border-border/60 pb-1.5">
+              <span className="text-muted">Submitted</span>
+              <span className="font-medium text-ink">{selected.submitted}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted">Assigned Reviewer</span>
+              <span className="font-medium text-ink">{selected.reviewer}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Registration() {
   const [stage, setStage] = useState<Stage>("login");
+  const [tab, setTab] = useState<Tab>("new");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [appId, setAppId] = useState("");
@@ -101,11 +197,35 @@ export default function Registration() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-ink">Company &amp; Product Registration</h1>
-        <p className="subtle">Logged in as {DEMO_CREDENTIALS.email}</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-ink">Company &amp; Product Registration</h1>
+          <p className="subtle">Logged in as {DEMO_CREDENTIALS.email}</p>
+        </div>
+        <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
+          <button
+            onClick={() => setTab("new")}
+            className={`flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors ${
+              tab === "new" ? "bg-white text-gt-purple shadow" : "text-muted hover:text-ink"
+            }`}
+          >
+            <FileSignature size={13} /> New Registration
+          </button>
+          <button
+            onClick={() => setTab("tracker")}
+            className={`flex items-center gap-1.5 text-xs font-medium rounded-md px-3 py-1.5 transition-colors ${
+              tab === "tracker" ? "bg-white text-gt-purple shadow" : "text-muted hover:text-ink"
+            }`}
+          >
+            <ClipboardList size={13} /> Application Tracker
+          </button>
+        </div>
       </div>
 
+      {tab === "tracker" ? (
+        <ApplicationTracker />
+      ) : (
+      <>
       <div className="card card-pad">
         <div className="flex items-center gap-2 mb-4">
           <Building2 size={18} className="text-gt-purple" />
@@ -181,6 +301,8 @@ export default function Registration() {
       <button className="btn-primary w-full justify-center" onClick={handleSubmit}>
         Submit Application
       </button>
+      </>
+      )}
     </div>
   );
 }

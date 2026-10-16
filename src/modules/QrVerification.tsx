@@ -1,17 +1,28 @@
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { ScanLine, Star, ShieldCheck, Smartphone } from "lucide-react";
+import { ScanLine, Star, ShieldCheck, Smartphone, History } from "lucide-react";
 import { APPROVED_MODEL, qrPayload } from "../data/mockData";
+
+interface ScanLogEntry {
+  id: string;
+  time: string;
+}
+
+function nowLabel() {
+  return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
 
 export default function QrVerification() {
   const [scanned, setScanned] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [history, setHistory] = useState<ScanLogEntry[]>([]);
 
   function simulateScan() {
     setScanning(true);
     setTimeout(() => {
       setScanning(false);
       setScanned(true);
+      setHistory((h) => [{ id: `${Date.now()}`, time: nowLabel() }, ...h].slice(0, 8));
     }, 900);
   }
 
@@ -90,6 +101,29 @@ export default function QrVerification() {
           )}
         </div>
       </div>
+
+      {history.length > 0 && (
+        <div className="card card-pad spark-fade">
+          <div className="flex items-center gap-2 mb-3">
+            <History size={16} className="text-gt-purple" />
+            <h2 className="section-title">Recently Verified Certificates</h2>
+          </div>
+          <div className="space-y-2">
+            {history.map((h, i) => (
+              <div key={h.id} className="flex items-center gap-3 rounded-lg border border-border px-3 py-2 text-sm">
+                <div className="w-7 h-7 rounded-full bg-good/10 text-good grid place-items-center shrink-0">
+                  <ShieldCheck size={14} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-ink">{APPROVED_MODEL.certificateNumber} &middot; {APPROVED_MODEL.brand} {APPROVED_MODEL.model}</div>
+                  <div className="text-[11px] text-muted">Verified authentic at {h.time}</div>
+                </div>
+                {i === 0 && <span className="pill bg-good/10 text-good shrink-0">Latest</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
