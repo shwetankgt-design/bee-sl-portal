@@ -8,6 +8,9 @@ import {
   MessageCircleQuestion,
   ArrowRight,
   Sparkles,
+  ScanLine,
+  Camera,
+  AlertOctagon,
 } from "lucide-react";
 
 const MODULES = [
@@ -18,10 +21,28 @@ const MODULES = [
     desc: "Manufacturer login, company onboarding, and product registration with test-lab report upload.",
   },
   {
+    to: "/ocr-registration",
+    icon: ScanLine,
+    title: "OCR Auto-fill",
+    desc: "Upload a test lab report and let edge AI auto-extract fields straight into registration.",
+  },
+  {
+    to: "/star-predictor",
+    icon: Star,
+    title: "Pre-Check Star Predictor",
+    desc: "Live, real-time pre-submission star rating and pass/fail eligibility check.",
+  },
+  {
     to: "/star-rating",
     icon: Star,
     title: "AI-Based Star Rating Calculator",
     desc: "Extracts test parameters and computes a live, adjustable BEE star rating with AI validation.",
+  },
+  {
+    to: "/snap-verify",
+    icon: Camera,
+    title: "Snap-to-Verify",
+    desc: "Scan a product label and cross-check it against the BEE registry for authenticity.",
   },
   {
     to: "/qr-verification",
@@ -40,6 +61,12 @@ const MODULES = [
     icon: LayoutDashboard,
     title: "AI-Powered Dashboard",
     desc: "State-wise registrations, quarterly trends, category mix, KPIs and natural-language AI insights.",
+  },
+  {
+    to: "/anomaly-dashboard",
+    icon: AlertOctagon,
+    title: "Anomaly Detection Dashboard",
+    desc: "Officer view of AI-flagged registrations ranked by severity and deviation.",
   },
   {
     to: "/grievance",

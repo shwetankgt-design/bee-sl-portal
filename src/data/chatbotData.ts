@@ -168,6 +168,29 @@ const DEFAULT_QUICK_REPLIES: QuickReply[] = [
   { label: "Talk to a human", value: "I want to talk to a human agent" },
 ];
 
+export type AssistantRole = "manufacturer" | "consumer" | "officer";
+
+export const ROLE_QUICK_REPLIES: Record<AssistantRole, QuickReply[]> = {
+  manufacturer: [
+    { label: "Check my application status", value: "Check my application status" },
+    { label: "Star rating criteria", value: "What are the star rating thresholds?" },
+    { label: "How do I use OCR auto-fill?", value: "How do I use OCR auto-fill?" },
+    { label: "How does the star predictor work?", value: "How does the star predictor work?" },
+  ],
+  consumer: [
+    { label: "Verify a product", value: "How do I verify a product?" },
+    { label: "How does Snap-to-Verify work?", value: "How does snap to verify work?" },
+    { label: "Report a counterfeit", value: "I want to report a counterfeit" },
+    { label: "Talk to a human", value: "I want to talk to a human agent" },
+  ],
+  officer: [
+    { label: "Show flagged cases", value: "Show me flagged cases" },
+    { label: "How does anomaly detection work?", value: "How does anomaly detection work?" },
+    { label: "Registry search help", value: "How do I search the registry?" },
+    { label: "Compliance monitoring", value: "What is compliance monitoring?" },
+  ],
+};
+
 const INTENTS: Intent[] = [
   {
     id: "registration-process",
@@ -443,6 +466,72 @@ const INTENTS: Intent[] = [
     reply: {
       text: "You're welcome! Is there anything else I can help you with regarding BEE registration, star ratings, or certificates?",
       quickReplies: DEFAULT_QUICK_REPLIES,
+    },
+  },
+  {
+    id: "ocr-autofill",
+    keywords: ["ocr", "auto-fill", "autofill", "scan document", "upload test lab report", "extract fields"],
+    reply: {
+      text: "**OCR Auto-fill** lets you upload a test lab report (PDF/image) and our edge AI engine automatically extracts fields like Brand, Model, Category, Capacity, Annual Energy Consumption and ISEER — with a confidence score per field. You review and edit before confirming into the Registration form. Try it from the sidebar under **OCR Auto-fill**.",
+      quickReplies: [
+        { label: "Open OCR Auto-fill", value: "How do I use OCR auto-fill?" },
+        { label: "Registration process", value: "How do I register a product?" },
+      ],
+    },
+  },
+  {
+    id: "star-predictor-explain",
+    keywords: ["star predictor", "pre-check", "precheck", "predict my star rating", "eligibility check"],
+    reply: {
+      text: "The **Pre-Check Star Predictor** lets you enter your product's key spec (ISEER, energy consumption, or service value depending on category) and instantly see your likely star rating, PASS/FAIL against the mandatory minimum, an AI confidence score, and what it would take to reach 5-star — all live as you adjust the input, before you submit anything formally.",
+      quickReplies: [
+        { label: "Open Star Predictor", value: "Open the star predictor" },
+        { label: "Star rating criteria", value: "What are the star rating thresholds?" },
+      ],
+    },
+  },
+  {
+    id: "snap-verify-explain",
+    keywords: ["snap to verify", "snap-to-verify", "how do i verify a product", "scan a product", "verify a product"],
+    reply: {
+      text: "**Snap-to-Verify** lets you scan a product's label with your camera (or pick a sample scan in this demo). Our on-device AI analyzes the label and cross-checks it against the official BEE registry in seconds — showing either an ✅ Authentic result with full certificate details, or a ⚠️ Mismatch/Counterfeit alert with the specific reason, plus a one-tap **Report this product** button.",
+      quickReplies: [
+        { label: "Open Snap-to-Verify", value: "Open snap to verify" },
+        { label: "Report a counterfeit", value: "I want to report a counterfeit" },
+      ],
+    },
+  },
+  {
+    id: "report-counterfeit",
+    keywords: ["report a counterfeit", "report this product", "fake product", "counterfeit product"],
+    reply: {
+      text: "To report a suspected counterfeit or mismatched product: use **Snap-to-Verify**, scan the product, and if it's flagged as a mismatch or not found, tap **Report this product** — this instantly creates a grievance ticket that's routed to the BEE market surveillance team.",
+      quickReplies: [
+        { label: "Open Snap-to-Verify", value: "Open snap to verify" },
+        { label: "Check my application status", value: "Check my application status" },
+      ],
+    },
+  },
+  {
+    id: "anomaly-detection-explain",
+    keywords: ["anomaly detection", "flagged cases", "show me flagged", "how does anomaly detection work"],
+    reply: {
+      text: "The **Anomaly Detection Dashboard** surfaces manufacturer/model registrations that our AI engine has flagged — e.g. ISEER values far above category norms, duplicate test report hashes, or inconsistent capacity-vs-energy data. Each case shows a severity (High/Medium/Low), a plain-language reason, and a comparison chart of the declared value vs the category distribution. Officers can Flag for Field Inspection, Request Clarification, or Dismiss as False Positive directly from the case detail drawer.",
+      quickReplies: [
+        { label: "Open Anomaly Dashboard", value: "Open the anomaly dashboard" },
+        { label: "Compliance monitoring", value: "What is compliance monitoring?" },
+      ],
+    },
+  },
+  {
+    id: "registry-search-help",
+    keywords: ["registry search", "search the registry", "how do i search", "look up a certificate"],
+    reply: {
+      text: "You can search the BEE registry via the **QR Verification Portal** (enter a certificate number or model) or the **Blockchain Certificate** module (search by certificate hash). Both return the manufacturer, star rating, status and validity for any registered model.",
+      quickReplies: [
+        { label: "Open QR Verification", value: "How does QR verification work?" },
+        { label: "Blockchain certificate", value: "How does blockchain certificate verification work?" },
+      ],
     },
   },
   {

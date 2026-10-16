@@ -1,23 +1,21 @@
-import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
-import { matchIntent, type ChatMsg, type QuickReply } from "../data/chatbotData";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { matchIntent, ROLE_QUICK_REPLIES, type ChatMsg, type QuickReply } from "../data/chatbotData";
+import { useRole } from "./RoleContext";
 
 function nowLabel() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-const WELCOME: ChatMsg = {
-  id: "welcome-1",
-  sender: "assistant",
-  text:
-    "Hello! I'm the **BEE S&L Virtual Assistant**. Ask me about registration, star ratings, certificates, renewals, or your application status.",
-  quickReplies: [
-    { label: "Check my application status", value: "Check my application status" },
-    { label: "Star rating criteria", value: "What are the star rating thresholds?" },
-    { label: "Renewal process", value: "How do I renew my label?" },
-    { label: "Talk to a human", value: "I want to talk to a human agent" },
-  ],
-  timestamp: nowLabel(),
-};
+function buildWelcome(quickReplies: QuickReply[]): ChatMsg {
+  return {
+    id: `welcome-${Date.now()}`,
+    sender: "assistant",
+    text:
+      "Hello! I'm the **BEE S&L Virtual Assistant**. Ask me about registration, star ratings, certificates, renewals, or your application status.",
+    quickReplies,
+    timestamp: nowLabel(),
+  };
+}
 
 interface ChatContextValue {
   messages: ChatMsg[];
@@ -37,11 +35,23 @@ const ChatContext = createContext<ChatContextValue | null>(null);
 type PendingFlow = "await-ticket-id" | null;
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const [messages, setMessages] = useState<ChatMsg[]>([WELCOME]);
+  const { role } = useRole();
+  const [messages, setMessages] = useState<ChatMsg[]>([buildWelcome(ROLE_QUICK_REPLIES[role])]);
   const [typing, setTyping] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [unread, setUnread] = useState(1);
   const pendingFlow = useRef<PendingFlow>(null);
+  const lastRole = useRef(role);
+
+  // When the role changes, refresh the welcome message's quick replies so the
+  // assistant surfaces role-relevant suggestions without wiping prior chat history.
+  useEffect(() => {
+    if (lastRole.current === role) return;
+    lastRole.current = role;
+    setMessages((m) =>
+      m.map((msg) => (msg.id.startsWith("welcome-") ? { ...msg, quickReplies: ROLE_QUICK_REPLIES[role] } : msg))
+    );
+  }, [role]);
 
   const pushBotReply = useCallback((raw: ReturnType<typeof matchIntent>) => {
     setTyping(true);
