@@ -72,7 +72,7 @@ const MODULES = [
     to: "/grievance",
     icon: MessageCircleQuestion,
     title: "AI Grievance Assistant",
-    desc: "Conversational assistant for manufacturers to track status, raise tickets, and get instant answers.",
+    desc: "Talk to Buzzy for any question — track status, raise tickets, and ask natural-language \"Talk to Data\" questions over the live registry.",
   },
 ];
 

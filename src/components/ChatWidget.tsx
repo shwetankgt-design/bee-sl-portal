@@ -17,7 +17,7 @@ export function ChatWidget() {
               </div>
               <div className="leading-tight">
                 <div className="text-sm font-semibold">Buzzy &middot; BEE S&amp;L Assistant</div>
-                <div className="text-[11px] text-white/75">Online &middot; Mock AI Demo</div>
+                <div className="text-[11px] text-white/75">Talk to Buzzy for any question</div>
               </div>
             </div>
             <button
@@ -36,7 +36,8 @@ export function ChatWidget() {
 
       <button
         onClick={toggleChat}
-        aria-label={isOpen ? "Close chat assistant" : "Open chat assistant"}
+        aria-label={isOpen ? "Close chat assistant" : "Talk to Buzzy for any question"}
+        title={isOpen ? undefined : "Talk to Buzzy for any question"}
         className={`relative w-20 h-20 rounded-full shadow-cardhover grid place-items-center hover:scale-105 active:scale-95 transition-transform ${
           isOpen ? "bg-gradient-to-br from-gt-purple to-gt-teal text-white" : "bg-white border-2 border-gt-teal-light/60"
         }`}

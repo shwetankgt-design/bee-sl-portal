@@ -22,7 +22,7 @@ export default function Grievance() {
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
         <h1 className="text-xl font-bold text-ink">AI Grievance Assistant</h1>
-        <p className="subtle">Ticket history &amp; analytics, plus the same AI assistant available from the floating widget everywhere in the portal.</p>
+        <p className="subtle">Ticket history &amp; analytics, plus the same AI assistant available from the floating widget everywhere in the portal. Talk to Buzzy for any question.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -112,6 +112,7 @@ export default function Grievance() {
             <div className="shrink-0 px-4 py-3 border-b border-border flex items-center gap-2">
               <MessageCircle size={16} className="text-gt-purple" />
               <div className="text-sm font-semibold text-ink">AI Assistant</div>
+              <span className="text-[11px] text-muted ml-2">Talk to Buzzy for any question</span>
               <span className="pill bg-gt-teal/10 text-gt-teal-dark ml-auto">Same chat as the floating widget</span>
             </div>
             <div className="flex-1 min-h-0">

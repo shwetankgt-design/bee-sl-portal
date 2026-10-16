@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, MessageSquareText, TableProperties } from "lucide-react";
 import { useChat } from "../context/ChatContext";
 import { ChatBubbleContent } from "./ChatMessageView";
+import { TalkToDataPanel } from "./TalkToDataPanel";
+import { useRole } from "../context/RoleContext";
+
+type PanelMode = "assistant" | "talk-to-data";
 
 export function ChatPanelBody({ compact = false }: { compact?: boolean }) {
+  const { role } = useRole();
   const { messages, typing, sendMessage, sendQuickReply } = useChat();
   const [input, setInput] = useState("");
+  const [mode, setMode] = useState<PanelMode>(role === "officer" ? "talk-to-data" : "assistant");
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,6 +28,29 @@ export function ChatPanelBody({ compact = false }: { compact?: boolean }) {
 
   return (
     <div className="flex flex-col h-full min-h-0">
+      <div className="shrink-0 flex items-center gap-1 p-2 border-b border-border bg-surface/60">
+        <button
+          onClick={() => setMode("assistant")}
+          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 transition-colors ${
+            mode === "assistant" ? "bg-gt-purple text-white shadow-card" : "text-muted hover:bg-gt-purple/5"
+          }`}
+        >
+          <MessageSquareText size={13} /> Assistant
+        </button>
+        <button
+          onClick={() => setMode("talk-to-data")}
+          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 transition-colors ${
+            mode === "talk-to-data" ? "bg-gt-teal-dark text-white shadow-card" : "text-muted hover:bg-gt-teal/5"
+          }`}
+        >
+          <TableProperties size={13} /> Talk to Data
+        </button>
+      </div>
+
+      {mode === "talk-to-data" ? (
+        <TalkToDataPanel compact={compact} />
+      ) : (
+        <>
       <div className={`flex-1 overflow-y-auto space-y-4 ${compact ? "p-3" : "p-4"}`}>
         {messages.map((m) => (
           <div key={m.id} className={`flex gap-2 ${m.sender === "user" ? "justify-end" : "justify-start"}`}>
@@ -90,6 +119,8 @@ export function ChatPanelBody({ compact = false }: { compact?: boolean }) {
           <Send size={16} />
         </button>
       </div>
+      </>
+      )}
     </div>
   );
 }

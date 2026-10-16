@@ -1,17 +1,20 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { matchIntent, ROLE_QUICK_REPLIES, type ChatMsg, type QuickReply } from "../data/chatbotData";
+import { matchIntent, ROLE_QUICK_REPLIES, type AssistantRole, type ChatMsg, type QuickReply } from "../data/chatbotData";
 import { useRole } from "./RoleContext";
 
 function nowLabel() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-function buildWelcome(quickReplies: QuickReply[]): ChatMsg {
+function buildWelcome(quickReplies: QuickReply[], role: AssistantRole): ChatMsg {
+  const text =
+    role === "officer"
+      ? "Hello Officer! I'm **Buzzy**. Talk to Buzzy for any question — switch to the **Talk to Data** tab above for real, computed answers over the live registry (flagged cases, state/manufacturer rankings, compliance averages, and more), or ask me about registration, certificates, or renewals here."
+      : "Hello! I'm the **BEE S&L Virtual Assistant**. Ask me about registration, star ratings, certificates, renewals, or your application status.";
   return {
     id: `welcome-${Date.now()}`,
     sender: "assistant",
-    text:
-      "Hello! I'm the **BEE S&L Virtual Assistant**. Ask me about registration, star ratings, certificates, renewals, or your application status.",
+    text,
     quickReplies,
     timestamp: nowLabel(),
   };
@@ -36,7 +39,7 @@ type PendingFlow = "await-ticket-id" | null;
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { role } = useRole();
-  const [messages, setMessages] = useState<ChatMsg[]>([buildWelcome(ROLE_QUICK_REPLIES[role])]);
+  const [messages, setMessages] = useState<ChatMsg[]>([buildWelcome(ROLE_QUICK_REPLIES[role], role)]);
   const [typing, setTyping] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [unread, setUnread] = useState(1);
@@ -49,7 +52,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     if (lastRole.current === role) return;
     lastRole.current = role;
     setMessages((m) =>
-      m.map((msg) => (msg.id.startsWith("welcome-") ? { ...msg, quickReplies: ROLE_QUICK_REPLIES[role] } : msg))
+      m.map((msg) =>
+        msg.id.startsWith("welcome-") ? { ...buildWelcome(ROLE_QUICK_REPLIES[role], role), id: msg.id } : msg
+      )
     );
   }, [role]);
 
