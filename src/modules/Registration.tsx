@@ -1,9 +1,209 @@
 import { useState, type DragEvent } from "react";
-import { LogIn, Building2, Package, UploadCloud, CheckCircle2, FileText, ClipboardList, FileSignature, Clock, Search, XCircle } from "lucide-react";
+import {
+  LogIn,
+  Building2,
+  Package,
+  UploadCloud,
+  CheckCircle2,
+  FileText,
+  ClipboardList,
+  FileSignature,
+  Clock,
+  Search,
+  XCircle,
+  ScanLine,
+  FileSearch,
+  Table2,
+  Sparkles,
+  ArrowRight,
+} from "lucide-react";
 import { DEMO_CREDENTIALS, buildStatusTimeline, generateApplicationId, TRACKED_APPLICATIONS, type TrackedApplication } from "../data/mockData";
+import { OCR_SAMPLE_REPORTS, type OcrSampleReport } from "../data/registryData";
 
-type Stage = "login" | "form" | "success";
+type Stage = "login" | "ocr" | "form" | "success";
 type Tab = "new" | "tracker";
+type OcrStage = "pick" | "scanning" | "result";
+
+const SCAN_STEPS = ["Detecting document type", "Reading tables", "Extracting values"];
+
+interface FieldRow {
+  label: string;
+  value: string;
+  confidence: number;
+}
+
+function buildFields(report: OcrSampleReport): FieldRow[] {
+  const rows: FieldRow[] = [
+    { label: "Brand", value: report.brand, confidence: 98 },
+    { label: "Model", value: report.model, confidence: 95 },
+    { label: "Category", value: report.category, confidence: 97 },
+    { label: "Capacity", value: report.capacity, confidence: 93 },
+  ];
+  if (report.annualEnergyConsumption !== undefined) {
+    rows.push({ label: "Annual Energy Consumption (kWh)", value: String(report.annualEnergyConsumption), confidence: 96 });
+  }
+  if (report.iseer !== undefined) {
+    rows.push({ label: "ISEER Value", value: report.iseer.toFixed(2), confidence: 94 });
+  }
+  rows.push({ label: "Test Lab Name", value: report.testLab, confidence: 99 });
+  rows.push({ label: "Report Date", value: report.reportDate, confidence: 97 });
+  return rows;
+}
+
+// Step 1 of New Registration: OCR Auto-fill, embedded directly in the flow so a
+// manufacturer encounters it without leaving Registration. On confirm, the
+// extracted fields are handed up to prefill Step 2 (Company/Product form).
+function OcrStep({ onSkip, onConfirm }: { onSkip: () => void; onConfirm: (report: OcrSampleReport, fields: FieldRow[]) => void }) {
+  const [stage, setStage] = useState<OcrStage>("pick");
+  const [report, setReport] = useState<OcrSampleReport | null>(null);
+  const [stepIdx, setStepIdx] = useState(0);
+  const [fields, setFields] = useState<FieldRow[]>([]);
+
+  function startScan(r: OcrSampleReport) {
+    setReport(r);
+    setStage("scanning");
+    setStepIdx(0);
+    let i = 0;
+    const interval = setInterval(() => {
+      i += 1;
+      setStepIdx(i);
+      if (i >= SCAN_STEPS.length) {
+        clearInterval(interval);
+        setTimeout(() => {
+          setFields(buildFields(r));
+          setStage("result");
+        }, 400);
+      }
+    }, 550);
+  }
+
+  function updateField(idx: number, value: string) {
+    setFields((f) => f.map((row, i) => (i === idx ? { ...row, value } : row)));
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-8 h-8 rounded-lg bg-gt-purple/10 text-gt-purple grid place-items-center">
+          <ScanLine size={16} />
+        </div>
+        <div>
+          <h2 className="font-semibold text-sm text-ink">Step 1 — Scan Test Report (OCR Auto-fill)</h2>
+          <p className="text-xs text-muted">Upload a test lab report and let edge AI extract fields automatically — or skip to fill the form manually.</p>
+        </div>
+      </div>
+
+      {stage === "pick" && (
+        <div className="card card-pad space-y-5">
+          <div className="border-2 border-dashed border-gt-purple/30 rounded-xl py-8 sm:py-10 text-center bg-gt-purple/5">
+            <div className="w-14 h-14 mx-auto rounded-full bg-gt-purple/10 text-gt-purple grid place-items-center mb-3">
+              <UploadCloud size={26} />
+            </div>
+            <div className="font-semibold text-ink mb-1">Drop a test lab report here</div>
+            <div className="text-xs text-muted">or pick one of the sample reports below to simulate an upload</div>
+          </div>
+          <div>
+            <h2 className="section-title mb-3">Load Sample Report</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {OCR_SAMPLE_REPORTS.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => startScan(r)}
+                  className="text-left rounded-lg border border-border hover:border-gt-purple-light hover:shadow-card transition-all p-3"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gt-teal/10 text-gt-teal-dark grid place-items-center mb-2">
+                    <FileSearch size={15} />
+                  </div>
+                  <div className="text-sm font-semibold text-ink mb-0.5">{r.label}</div>
+                  <div className="text-xs text-muted">{r.category}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <button className="btn-ghost text-sm" onClick={onSkip}>
+              Skip OCR &amp; fill form manually <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {stage === "scanning" && report && (
+        <div className="card card-pad text-center py-12 sm:py-14 spark-fade">
+          <div className="w-16 h-16 mx-auto rounded-full bg-gt-purple/10 text-gt-purple grid place-items-center mb-4 pulse-soft">
+            <ScanLine size={28} />
+          </div>
+          <h2 className="font-semibold text-ink mb-1">Scanning {report.label}...</h2>
+          <p className="subtle mb-6">On-device AI is extracting structured fields from the document.</p>
+          <div className="max-w-xs mx-auto space-y-2.5">
+            {SCAN_STEPS.map((s, i) => (
+              <div key={s} className="flex items-center gap-2.5 text-sm">
+                {i < stepIdx ? (
+                  <CheckCircle2 size={16} className="text-good shrink-0" />
+                ) : i === stepIdx ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-gt-purple border-t-transparent animate-spin shrink-0" />
+                ) : (
+                  <span className="w-4 h-4 rounded-full border-2 border-border shrink-0" />
+                )}
+                <span className={i <= stepIdx ? "text-ink font-medium" : "text-muted"}>{s}</span>
+              </div>
+            ))}
+          </div>
+          <div className="max-w-xs mx-auto mt-6 h-1.5 rounded-full bg-border overflow-hidden">
+            <div
+              className="h-full bg-gt-purple transition-all duration-500"
+              style={{ width: `${(stepIdx / SCAN_STEPS.length) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {stage === "result" && report && (
+        <div className="space-y-6 spark-fade">
+          <div className="card card-pad bg-gradient-to-br from-good/5 to-gt-teal/5 border-good/20">
+            <div className="flex items-center gap-2 text-good font-semibold text-sm">
+              <CheckCircle2 size={16} /> Document scanned successfully — fields extracted with high confidence
+            </div>
+          </div>
+
+          <div className="card card-pad">
+            <div className="flex items-center gap-2 mb-4">
+              <Table2 size={16} className="text-gt-purple" />
+              <h2 className="section-title">Auto-filled Fields — review &amp; edit before continuing</h2>
+            </div>
+            <div className="space-y-3">
+              {fields.map((f, i) => (
+                <div key={f.label} className="grid grid-cols-1 sm:grid-cols-[1fr_1.4fr_auto] items-center gap-2 sm:gap-3">
+                  <label className="text-xs text-muted">{f.label}</label>
+                  <input className="input" value={f.value} onChange={(e) => updateField(i, e.target.value)} />
+                  <span className="pill bg-good/10 text-good whitespace-nowrap w-fit">
+                    <CheckCircle2 size={11} /> {f.confidence}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card card-pad bg-gradient-to-br from-gt-purple/5 to-gt-teal/5 border-gt-purple/20 flex items-center gap-3">
+            <Sparkles size={18} className="text-gt-purple shrink-0" />
+            <div className="text-xs text-muted flex-1">
+              Edge AI confidence for this extraction: <span className="font-semibold text-ink">96.4%</span>. All fields are editable above before you continue.
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 flex-wrap">
+            <button className="btn-ghost" onClick={() => setStage("pick")}>
+              Try Another Report
+            </button>
+            <button className="btn-primary" onClick={() => onConfirm(report, fields)}>
+              Confirm &amp; Continue to Company/Product Details <ArrowRight size={15} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const TRACKER_STATUS_STYLES: Record<TrackedApplication["status"], { bg: string; text: string; Icon: typeof Clock }> = {
   Submitted: { bg: "bg-muted/10", text: "text-muted", Icon: FileSignature },
@@ -112,6 +312,18 @@ export default function Registration() {
   const [product, setProduct] = useState({ brand: "LG", name: "Split AC 1.5 Ton Inverter", capacity: "1.5 Ton", energy: "850" });
 
   function handleLogin() {
+    setStage("ocr");
+  }
+
+  function handleOcrConfirm(report: OcrSampleReport, fields: FieldRow[]) {
+    const byLabel = (label: string) => fields.find((f) => f.label === label)?.value;
+    setProduct({
+      brand: report.brand,
+      name: `${report.category} — ${report.model}`,
+      capacity: byLabel("Capacity") ?? report.capacity,
+      energy: byLabel("Annual Energy Consumption (kWh)") ?? (report.annualEnergyConsumption !== undefined ? String(report.annualEnergyConsumption) : product.energy),
+    });
+    setFileName(`${report.model}_TestLabReport.pdf`);
     setStage("form");
   }
 
@@ -150,6 +362,14 @@ export default function Registration() {
             Login <LogIn size={16} />
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (stage === "ocr") {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <OcrStep onSkip={() => setStage("form")} onConfirm={handleOcrConfirm} />
       </div>
     );
   }
@@ -199,8 +419,8 @@ export default function Registration() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-ink">Company &amp; Product Registration</h1>
-          <p className="subtle">Logged in as {DEMO_CREDENTIALS.email}</p>
+          <h1 className="text-xl font-bold text-ink">Step 2 — Company &amp; Product Registration</h1>
+          <p className="subtle">Logged in as {DEMO_CREDENTIALS.email}{fileName ? " · Pre-filled from OCR scan" : ""}</p>
         </div>
         <div className="flex gap-1 bg-surface border border-border rounded-lg p-1">
           <button
@@ -299,7 +519,7 @@ export default function Registration() {
       </div>
 
       <button className="btn-primary w-full justify-center" onClick={handleSubmit}>
-        Submit Application
+        Step 3 — Submit Application
       </button>
       </>
       )}

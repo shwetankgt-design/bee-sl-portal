@@ -463,6 +463,9 @@ export interface RegistryRecord {
   anomalyReason?: string;
   anomalySeverity?: "High" | "Medium" | "Low";
   deviationPct?: number;
+  processingDays: number;
+  energySavingsKwh: number;
+  isExpired: boolean;
 }
 
 function pad(n: number, len = 5) {
@@ -497,8 +500,8 @@ export function buildRegistry(): RegistryRecord[] {
   const records: RegistryRecord[] = [];
   let seq = 1000;
 
-  // ~60 manufacturer/product registry records
-  for (let i = 0; i < 62; i++) {
+  // ~550 manufacturer/product registry records
+  for (let i = 0; i < 550; i++) {
     const category = APPLIANCE_CATEGORIES[Math.floor(rnd() * APPLIANCE_CATEGORIES.length)];
     const def = CATEGORY_METRICS[category];
     const manufacturer = MANUFACTURERS[Math.floor(rnd() * MANUFACTURERS.length)];
@@ -534,11 +537,14 @@ export function buildRegistry(): RegistryRecord[] {
       anomalyReason: anomaly?.reason,
       anomalySeverity: anomaly?.severity,
       deviationPct: isAnomaly ? Math.floor(8 + rnd() * 30) : undefined,
+      processingDays: status === "Approved" ? Math.floor(4 + rnd() * 14) : Math.floor(6 + rnd() * 34),
+      energySavingsKwh: Math.round((status === "Approved" ? 180 : 40) + Math.max(1, stars) * 95 + rnd() * 140),
+      isExpired: status === "Approved" && rnd() < 0.06,
     });
   }
 
-  // ~20 consumer verification / complaint records
-  for (let i = 0; i < 22; i++) {
+  // ~250 consumer verification / complaint records
+  for (let i = 0; i < 250; i++) {
     const category = APPLIANCE_CATEGORIES[Math.floor(rnd() * APPLIANCE_CATEGORIES.length)];
     const def = CATEGORY_METRICS[category];
     const manufacturer = MANUFACTURERS[Math.floor(rnd() * MANUFACTURERS.length)];
@@ -547,6 +553,7 @@ export function buildRegistry(): RegistryRecord[] {
     const { stars } = predictStars(category, value);
     const isAnomaly = rnd() < 0.35;
     const anomaly = isAnomaly ? ANOMALY_REASONS[Math.floor(rnd() * ANOMALY_REASONS.length)] : undefined;
+    const cnsStatus: RecordStatus = isAnomaly ? "Flagged" : "Approved";
     seq += 1;
     const regDay = Math.floor(rnd() * 300);
     records.push({
@@ -561,7 +568,7 @@ export function buildRegistry(): RegistryRecord[] {
       metricUnit: def.unit,
       starRating: Math.max(1, stars),
       certificateId: `BEE-2026-${pad(seq)}`,
-      status: isAnomaly ? "Flagged" : "Approved",
+      status: cnsStatus,
       state,
       city: CITY_BY_STATE[state],
       registrationDate: dateFromOffset(2026, regDay),
@@ -572,11 +579,14 @@ export function buildRegistry(): RegistryRecord[] {
       anomalyReason: anomaly?.reason,
       anomalySeverity: anomaly?.severity,
       deviationPct: isAnomaly ? Math.floor(8 + rnd() * 30) : undefined,
+      processingDays: cnsStatus === "Approved" ? Math.floor(4 + rnd() * 14) : Math.floor(6 + rnd() * 34),
+      energySavingsKwh: Math.round((cnsStatus === "Approved" ? 180 : 40) + Math.max(1, stars) * 95 + rnd() * 140),
+      isExpired: cnsStatus === "Approved" && rnd() < 0.06,
     });
   }
 
-  // ~20 officer compliance/anomaly case records (higher anomaly density)
-  for (let i = 0; i < 22; i++) {
+  // ~250 officer compliance/anomaly case records (higher anomaly density)
+  for (let i = 0; i < 250; i++) {
     const category = APPLIANCE_CATEGORIES[Math.floor(rnd() * APPLIANCE_CATEGORIES.length)];
     const def = CATEGORY_METRICS[category];
     const manufacturer = MANUFACTURERS[Math.floor(rnd() * MANUFACTURERS.length)];
@@ -585,6 +595,7 @@ export function buildRegistry(): RegistryRecord[] {
     const { stars } = predictStars(category, value);
     const isAnomaly = rnd() < 0.8;
     const anomaly = isAnomaly ? ANOMALY_REASONS[Math.floor(rnd() * ANOMALY_REASONS.length)] : undefined;
+    const ofcStatus: RecordStatus = isAnomaly ? "Flagged" : "Approved";
     seq += 1;
     const regDay = Math.floor(rnd() * 300);
     records.push({
@@ -599,7 +610,7 @@ export function buildRegistry(): RegistryRecord[] {
       metricUnit: def.unit,
       starRating: Math.max(1, stars),
       certificateId: `BEE-2026-${pad(seq)}`,
-      status: isAnomaly ? "Flagged" : "Approved",
+      status: ofcStatus,
       state,
       city: CITY_BY_STATE[state],
       registrationDate: dateFromOffset(2026, regDay),
@@ -610,6 +621,9 @@ export function buildRegistry(): RegistryRecord[] {
       anomalyReason: anomaly?.reason,
       anomalySeverity: anomaly?.severity,
       deviationPct: isAnomaly ? Math.floor(8 + rnd() * 30) : undefined,
+      processingDays: ofcStatus === "Approved" ? Math.floor(4 + rnd() * 14) : Math.floor(6 + rnd() * 34),
+      energySavingsKwh: Math.round((ofcStatus === "Approved" ? 180 : 40) + Math.max(1, stars) * 95 + rnd() * 140),
+      isExpired: ofcStatus === "Approved" && rnd() < 0.06,
     });
   }
 
@@ -669,7 +683,201 @@ export const OCR_SAMPLE_REPORTS: OcrSampleReport[] = [
     testLab: "NABL-Accredited Lab, Bengaluru",
     reportDate: "28-Sep-2026",
   },
+  {
+    id: "ocr-4",
+    label: "Samsung 1.5 Ton Fixed Speed Split AC",
+    brand: "Samsung",
+    model: "SAM-AC-1.5T-FX-26",
+    category: "Room AC (Fixed Speed)",
+    capacity: "1.5 Ton",
+    iseer: 3.45,
+    testLab: "ERTL (North), New Delhi",
+    reportDate: "06-Oct-2026",
+  },
+  {
+    id: "ocr-5",
+    label: "IFB 7kg Front Load Washing Machine",
+    brand: "IFB",
+    model: "IFB-WM-7KG-FL-26",
+    category: "Washing Machine",
+    capacity: "7 kg Front Load",
+    annualEnergyConsumption: 0,
+    testLab: "NABL-Accredited Lab, Pune",
+    reportDate: "19-Sep-2026",
+  },
+  {
+    id: "ocr-6",
+    label: "Crompton 9W LED Lamp (Pack)",
+    brand: "Crompton",
+    model: "CGL-LED-9W-26",
+    category: "LED Lamps",
+    capacity: "9W",
+    annualEnergyConsumption: 0,
+    testLab: "NABL-Accredited Lab, Chennai",
+    reportDate: "11-Oct-2026",
+  },
+  {
+    id: "ocr-7",
+    label: "Whirlpool 320L Direct Cool Refrigerator",
+    brand: "Whirlpool",
+    model: "WHP-DC-320-26",
+    category: "Direct Cool Refrigerator",
+    capacity: "190-220L",
+    annualEnergyConsumption: 198,
+    testLab: "NABL-Accredited Lab, Noida",
+    reportDate: "24-Sep-2026",
+  },
 ];
+
+// -------------------- AI Star Rating Calculator sample reports --------------------
+// Five distinct, well-formed test lab reports spanning different appliance categories
+// and manufacturers, used by the Star Rating Calculator's sample picker. Each sample
+// carries a value expressed in that category's own metric (see CATEGORY_METRICS) so the
+// generic predictStars() engine can compute a live rating for any of them.
+
+export interface StarRatingSample {
+  id: string;
+  brand: string;
+  model: string;
+  manufacturer: string;
+  category: ApplianceCategory;
+  capacity: string;
+  value: number;
+  testLab: string;
+  reportDate: string;
+}
+
+export const STAR_RATING_SAMPLES: StarRatingSample[] = [
+  {
+    id: "srs-1",
+    brand: "LG",
+    model: "LG-AC-1.5T-INV-26",
+    manufacturer: "LG Electronics India Pvt. Ltd.",
+    category: "Room AC (Variable Speed/Inverter)",
+    capacity: "1.5 Ton",
+    value: 4.2,
+    testLab: "NABL-Accredited Lab, Noida",
+    reportDate: "28-Sep-2026",
+  },
+  {
+    id: "srs-2",
+    brand: "Godrej",
+    model: "GDJ-FF-320-26",
+    manufacturer: "Godrej Appliances",
+    category: "Frost Free Refrigerator",
+    capacity: "320L",
+    value: 285,
+    testLab: "NABL-Accredited Lab, Chennai",
+    reportDate: "02-Oct-2026",
+  },
+  {
+    id: "srs-3",
+    brand: "Havells",
+    model: "HVL-CF-1200-BLDC",
+    manufacturer: "Havells India Ltd.",
+    category: "Ceiling Fan",
+    capacity: "1200mm BLDC",
+    value: 6.4,
+    testLab: "NABL-Accredited Lab, Bengaluru",
+    reportDate: "28-Sep-2026",
+  },
+  {
+    id: "srs-4",
+    brand: "IFB",
+    model: "IFB-WM-7KG-FL-26",
+    manufacturer: "IFB Industries Ltd.",
+    category: "Washing Machine",
+    capacity: "7 kg Front Load",
+    value: 1.05,
+    testLab: "NABL-Accredited Lab, Pune",
+    reportDate: "19-Sep-2026",
+  },
+  {
+    id: "srs-5",
+    brand: "Crompton",
+    model: "CGL-LED-9W-26",
+    manufacturer: "Crompton Greaves Consumer Electricals",
+    category: "LED Lamps",
+    capacity: "9W",
+    value: 108,
+    testLab: "NABL-Accredited Lab, Chennai",
+    reportDate: "11-Oct-2026",
+  },
+  {
+    id: "srs-6",
+    brand: "Samsung",
+    model: "SAM-AC-1.5T-FX-26",
+    manufacturer: "Samsung India Electronics",
+    category: "Room AC (Fixed Speed)",
+    capacity: "1.5 Ton",
+    value: 3.35,
+    testLab: "ERTL (North), New Delhi",
+    reportDate: "06-Oct-2026",
+  },
+];
+
+// -------------------- Global MIS: energy labelling programs in other countries --------------------
+
+export interface GlobalMisRecord {
+  id: string;
+  country: string;
+  scheme: string;
+  category: ApplianceCategory;
+  productModel: string;
+  manufacturer: string;
+  adoptionRatePct: number;
+  energySavingsGwh: number;
+  certifiedProducts: number;
+  yoyGrowthPct: number;
+  year: number;
+}
+
+export const COUNTRIES = ["USA", "European Union", "China", "Japan", "Australia", "United Kingdom"];
+
+export const COUNTRY_SCHEMES: Record<string, string> = {
+  USA: "ENERGY STAR",
+  "European Union": "EU Energy Label",
+  China: "China Energy Label (CEL)",
+  Japan: "Top Runner Program",
+  Australia: "GEMS / Energy Rating Label",
+  "United Kingdom": "UK Energy Label (Post-Brexit)",
+};
+
+const GLOBAL_MANUFACTURERS = [
+  "Whirlpool Corp.", "LG Electronics", "Samsung Electronics", "Bosch Siemens Hausgeräte",
+  "Electrolux AB", "Haier Group", "Midea Group", "Panasonic Corp.", "Daikin Industries",
+  "Mitsubishi Electric", "Hisense", "Sharp Corp.", "GE Appliances", "Beko (Arçelik)", "Toshiba",
+];
+
+export function buildGlobalMis(): GlobalMisRecord[] {
+  const rnd = seededRandom(777);
+  const records: GlobalMisRecord[] = [];
+  let seq = 1;
+  const years = [2023, 2024, 2025, 2026];
+  for (let i = 0; i < 96; i++) {
+    const country = COUNTRIES[Math.floor(rnd() * COUNTRIES.length)];
+    const category = APPLIANCE_CATEGORIES[Math.floor(rnd() * APPLIANCE_CATEGORIES.length)];
+    const manufacturer = GLOBAL_MANUFACTURERS[Math.floor(rnd() * GLOBAL_MANUFACTURERS.length)];
+    const year = years[Math.floor(rnd() * years.length)];
+    seq += 1;
+    records.push({
+      id: `GMIS-${pad(seq, 4)}`,
+      country,
+      scheme: COUNTRY_SCHEMES[country],
+      category,
+      productModel: `${manufacturer.split(" ")[0].slice(0, 3).toUpperCase()}-${category.slice(0, 2).toUpperCase()}-${pad(seq, 4)}`,
+      manufacturer,
+      adoptionRatePct: Math.floor(35 + rnd() * 60),
+      energySavingsGwh: Number((5 + rnd() * 220).toFixed(1)),
+      certifiedProducts: Math.floor(500 + rnd() * 25000),
+      yoyGrowthPct: Number((-4 + rnd() * 22).toFixed(1)),
+      year,
+    });
+  }
+  return records;
+}
+
+export const GLOBAL_MIS: GlobalMisRecord[] = buildGlobalMis();
 
 // -------------------- Snap-to-Verify sample scan scenarios --------------------
 

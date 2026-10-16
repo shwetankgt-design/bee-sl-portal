@@ -65,6 +65,13 @@ export default function OcrRegistration() {
       <div>
         <h1 className="text-xl font-bold text-ink">OCR Auto-fill</h1>
         <p className="subtle">Upload a test lab report and let edge AI extract fields automatically, ready to confirm into Registration.</p>
+        <p className="text-xs text-muted mt-1">
+          Tip: OCR Auto-fill is now also built directly into{" "}
+          <button className="text-gt-purple font-semibold underline" onClick={() => navigate("/registration")}>
+            Step 1 of Manufacturer Registration
+          </button>
+          .
+        </p>
       </div>
 
       {stage === "pick" && (

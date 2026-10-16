@@ -14,6 +14,8 @@ const SEVERITY_TONE: Record<string, string> = {
   Low: "bg-muted/10 text-muted",
 };
 
+const PAGE_SIZE = 15;
+
 export default function AnomalyDashboard() {
   const [cases, setCases] = useState<Case[]>(() => FLAGGED_CASES.map((c) => ({ ...c, caseStatus: "Open" as CaseStatus })));
   const [severityFilter, setSeverityFilter] = useState<string>("All");
@@ -21,6 +23,7 @@ export default function AnomalyDashboard() {
   const [sortKey, setSortKey] = useState<"severity" | "deviation">("severity");
   const [selected, setSelected] = useState<Case | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
 
   const categories = useMemo(() => Array.from(new Set(FLAGGED_CASES.map((c) => c.category))), []);
   const severityRank: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
@@ -33,6 +36,19 @@ export default function AnomalyDashboard() {
         ? severityRank[b.anomalySeverity ?? "Low"] - severityRank[a.anomalySeverity ?? "Low"]
         : (b.deviationPct ?? 0) - (a.deviationPct ?? 0)
     );
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageSafe = Math.min(page, totalPages - 1);
+  const pagedFiltered = filtered.slice(pageSafe * PAGE_SIZE, pageSafe * PAGE_SIZE + PAGE_SIZE);
+
+  function changeSeverity(v: string) {
+    setSeverityFilter(v);
+    setPage(0);
+  }
+  function changeCategory(v: string) {
+    setCategoryFilter(v);
+    setPage(0);
+  }
 
   const totalFlagged = cases.length;
   const highSeverity = cases.filter((c) => c.anomalySeverity === "High").length;
@@ -64,13 +80,13 @@ export default function AnomalyDashboard() {
         <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
           <h2 className="section-title">Flagged Cases ({filtered.length})</h2>
           <div className="flex items-center gap-2 flex-wrap">
-            <select className="input !w-auto !py-1.5 text-xs" value={severityFilter} onChange={(e) => setSeverityFilter(e.target.value)}>
+            <select className="input !w-auto !py-1.5 text-xs" value={severityFilter} onChange={(e) => changeSeverity(e.target.value)}>
               <option value="All">All Severities</option>
               <option value="High">High</option>
               <option value="Medium">Medium</option>
               <option value="Low">Low</option>
             </select>
-            <select className="input !w-auto !py-1.5 text-xs" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+            <select className="input !w-auto !py-1.5 text-xs" value={categoryFilter} onChange={(e) => changeCategory(e.target.value)}>
               <option value="All">All Categories</option>
               {categories.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -84,7 +100,7 @@ export default function AnomalyDashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[760px]">
             <thead>
               <tr className="text-left text-[11px] text-muted border-b border-border">
                 <th className="py-2 pr-3">Manufacturer / Model</th>
@@ -97,7 +113,7 @@ export default function AnomalyDashboard() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((c) => (
+              {pagedFiltered.map((c) => (
                 <tr key={c.id} className="border-b border-border/60 last:border-0 hover:bg-surface/60">
                   <td className="py-2.5 pr-3">
                     <div className="font-medium text-ink">{c.manufacturer}</div>
@@ -129,6 +145,27 @@ export default function AnomalyDashboard() {
             </tbody>
           </table>
         </div>
+        {filtered.length > 0 && (
+          <div className="flex items-center justify-end gap-2 text-xs mt-3">
+            <button
+              className="px-2.5 py-1 rounded-md border border-border disabled:opacity-40"
+              disabled={pageSafe === 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+            >
+              Prev
+            </button>
+            <span className="text-muted">
+              Page {pageSafe + 1} / {totalPages}
+            </span>
+            <button
+              className="px-2.5 py-1 rounded-md border border-border disabled:opacity-40"
+              disabled={pageSafe >= totalPages - 1}
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
 
       {selected && (

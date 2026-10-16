@@ -1,5 +1,19 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertOctagon, Search, Link2, MessageCircleQuestion, ArrowRight, ShieldAlert, Gauge, CheckCircle2, LayoutDashboard } from "lucide-react";
+import {
+  AlertOctagon,
+  Search,
+  Link2,
+  MessageCircleQuestion,
+  ArrowRight,
+  ShieldAlert,
+  Gauge,
+  CheckCircle2,
+  LayoutDashboard,
+  Timer,
+  Zap,
+  ListChecks,
+} from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
 import { FLAGGED_CASES } from "../../data/registryData";
 
@@ -11,12 +25,33 @@ const QUICK_LINKS = [
   { to: "/grievance", icon: MessageCircleQuestion, title: "AI Grievance Assistant", desc: "Review and respond to manufacturer/consumer tickets." },
 ];
 
+const SEVERITY_TONE: Record<string, string> = {
+  High: "bg-bad/10 text-bad",
+  Medium: "bg-warn/10 text-warn",
+  Low: "bg-muted/10 text-muted",
+};
+
+const PAGE_SIZE = 10;
+
 export default function OfficerDashboard() {
   const { t } = useLanguage();
+  const [page, setPage] = useState(0);
+
   const highSeverity = FLAGGED_CASES.filter((c) => c.anomalySeverity === "High").length;
   const avgDeviation = Math.round(
     FLAGGED_CASES.reduce((sum, c) => sum + (c.deviationPct ?? 0), 0) / Math.max(1, FLAGGED_CASES.length)
   );
+  const avgProcessingDays = Math.round(
+    FLAGGED_CASES.reduce((sum, c) => sum + c.processingDays, 0) / Math.max(1, FLAGGED_CASES.length)
+  );
+  const energyAtRiskMwh = Math.round(FLAGGED_CASES.reduce((s, c) => s + c.energySavingsKwh, 0) / 1000);
+
+  const flaggedRows = useMemo(
+    () => [...FLAGGED_CASES].sort((a, b) => (b.deviationPct ?? 0) - (a.deviationPct ?? 0)).slice(0, 50),
+    []
+  );
+  const totalPages = Math.max(1, Math.ceil(flaggedRows.length / PAGE_SIZE));
+  const pagedRows = flaggedRows.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -33,6 +68,8 @@ export default function OfficerDashboard() {
         <StatTile icon={AlertOctagon} label={t("kpi.highSeverity")} value={highSeverity} bad />
         <StatTile icon={Gauge} label={t("kpi.avgDeviation")} value={avgDeviation} suffix="%" />
         <StatTile icon={CheckCircle2} label={t("kpi.resolvedThisMonth")} value={17} good />
+        <StatTile icon={Timer} label="Avg. Case Processing Time" value={avgProcessingDays} suffix=" days" />
+        <StatTile icon={Zap} label="Energy Savings At Risk" value={energyAtRiskMwh} suffix=" MWh/yr" />
       </div>
 
       <div className="card card-pad bg-gradient-to-br from-bad/5 to-gt-purple/5 border-bad/20">
@@ -45,6 +82,63 @@ export default function OfficerDashboard() {
             <div className="text-xs text-muted">Highest severity cases include ISEER anomalies and duplicate test report hashes.</div>
           </div>
           <Link to="/anomaly-dashboard" className="btn-primary shrink-0">Open Anomaly Dashboard</Link>
+        </div>
+      </div>
+
+      <div className="card card-pad">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <ListChecks size={16} className="text-gt-purple" />
+            <h2 className="section-title">Top Flagged Cases by Deviation ({flaggedRows.length})</h2>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <button
+              className="px-2.5 py-1 rounded-md border border-border disabled:opacity-40"
+              disabled={page === 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+            >
+              Prev
+            </button>
+            <span className="text-muted">
+              Page {page + 1} / {totalPages}
+            </span>
+            <button
+              className="px-2.5 py-1 rounded-md border border-border disabled:opacity-40"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[760px]">
+            <thead>
+              <tr className="text-left text-[11px] text-muted border-b border-border">
+                <th className="py-2 pr-3">Manufacturer / Model</th>
+                <th className="py-2 pr-3">Category</th>
+                <th className="py-2 pr-3">State</th>
+                <th className="py-2 pr-3">Severity</th>
+                <th className="py-2">Deviation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pagedRows.map((c) => (
+                <tr key={c.id} className="border-b border-border/60 last:border-0">
+                  <td className="py-2 pr-3 whitespace-nowrap">
+                    <div className="font-medium text-ink">{c.manufacturer}</div>
+                    <div className="text-xs text-muted">{c.model}</div>
+                  </td>
+                  <td className="py-2 pr-3 text-muted whitespace-nowrap">{c.category}</td>
+                  <td className="py-2 pr-3 text-muted whitespace-nowrap">{c.state}</td>
+                  <td className="py-2 pr-3">
+                    <span className={`pill ${SEVERITY_TONE[c.anomalySeverity ?? "Low"]}`}>{c.anomalySeverity}</span>
+                  </td>
+                  <td className="py-2 font-semibold text-ink">{c.deviationPct}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -75,7 +169,10 @@ function StatTile({ icon: Icon, label, value, good, bad, suffix }: { icon: typeo
       <div className={`w-8 h-8 rounded-lg grid place-items-center mb-2 ${bad ? "bg-bad/10 text-bad" : good ? "bg-good/10 text-good" : "bg-gt-purple/10 text-gt-purple"}`}>
         <Icon size={16} />
       </div>
-      <div className="text-2xl font-bold text-ink">{value.toLocaleString()}{suffix ?? ""}</div>
+      <div className="text-2xl font-bold text-ink">
+        {value.toLocaleString()}
+        {suffix ?? ""}
+      </div>
       <div className="text-xs text-muted mt-0.5">{label}</div>
     </div>
   );

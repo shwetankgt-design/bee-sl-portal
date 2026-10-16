@@ -22,6 +22,7 @@ export const TRANSLATIONS: Record<string, { en: string; hi: string }> = {
   "nav.anomaly": { en: "Anomaly Detection Dashboard", hi: "विसंगति जांच डैशबोर्ड" },
   "nav.registry": { en: "Registry Search", hi: "रजिस्ट्री खोज" },
   "nav.compliance": { en: "Compliance Dashboard", hi: "अनुपालन डैशबोर्ड" },
+  "nav.globalMis": { en: "International MIS Dashboard", hi: "अंतरराष्ट्रीय एमआईएस डैशबोर्ड" },
   "nav.explore": { en: "Explore All Modules", hi: "सभी मॉड्यूल देखें" },
 
   // Dashboard KPI labels (generic)

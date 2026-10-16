@@ -183,7 +183,21 @@ export const TRACKED_APPLICATIONS: TrackedApplication[] = [
 
 // -------------------- Dashboard filters --------------------
 
-export const DASHBOARD_STATES = ["All States", "Maharashtra", "Gujarat", "Tamil Nadu", "Karnataka", "Uttar Pradesh", "Delhi", "Telangana", "West Bengal"];
+export const DASHBOARD_STATES = [
+  "All States",
+  "Maharashtra",
+  "Gujarat",
+  "Tamil Nadu",
+  "Karnataka",
+  "Uttar Pradesh",
+  "Delhi",
+  "Telangana",
+  "West Bengal",
+  "Haryana",
+  "Rajasthan",
+  "Punjab",
+  "Madhya Pradesh",
+];
 
 export interface NonCompliantEntry {
   manufacturer: string;

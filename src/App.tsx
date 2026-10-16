@@ -16,6 +16,7 @@ import OcrRegistration from "./modules/OcrRegistration";
 import StarPredictor from "./modules/StarPredictor";
 import SnapVerify from "./modules/SnapVerify";
 import AnomalyDashboard from "./modules/AnomalyDashboard";
+import GlobalMis from "./modules/GlobalMis";
 
 export default function App() {
   return (
@@ -24,8 +25,9 @@ export default function App() {
         <ChatProvider>
           <Shell>
             <Routes>
-              <Route path="/" element={<RoleDashboard />} />
+              <Route path="/" element={<Explore />} />
               <Route path="/explore" element={<Explore />} />
+              <Route path="/role-dashboard" element={<RoleDashboard />} />
               <Route path="/registration" element={<Registration />} />
               <Route path="/ocr-registration" element={<OcrRegistration />} />
               <Route path="/star-rating" element={<StarRating />} />
@@ -36,6 +38,7 @@ export default function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/anomaly-dashboard" element={<AnomalyDashboard />} />
               <Route path="/grievance" element={<Grievance />} />
+              <Route path="/global-mis" element={<GlobalMis />} />
               <Route path="*" element={<RoleDashboard />} />
             </Routes>
           </Shell>

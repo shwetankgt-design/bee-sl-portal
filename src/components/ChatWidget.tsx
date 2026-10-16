@@ -6,9 +6,9 @@ export function ChatWidget() {
   const { isOpen, unread, toggleChat, closeChat } = useChat();
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-3 max-w-[calc(100vw-2rem)]">
       {isOpen && (
-        <div className="w-[380px] sm:w-[400px] h-[560px] max-h-[75vh] card flex flex-col overflow-hidden shadow-cardhover spark-fade">
+        <div className="w-[calc(100vw-2rem)] sm:w-[380px] lg:w-[400px] h-[70vh] sm:h-[560px] max-h-[75vh] card flex flex-col overflow-hidden shadow-cardhover spark-fade">
           <div className="shrink-0 bg-gradient-to-r from-gt-purple to-gt-teal-dark text-white px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-white/15 grid place-items-center">
