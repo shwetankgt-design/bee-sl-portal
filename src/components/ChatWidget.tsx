@@ -12,8 +12,8 @@ export function ChatWidget() {
         <div className="w-[calc(100vw-2rem)] sm:w-[380px] lg:w-[400px] h-[70vh] sm:h-[560px] max-h-[75vh] card flex flex-col overflow-hidden shadow-cardhover spark-fade">
           <div className="shrink-0 bg-gradient-to-r from-gt-purple to-gt-teal-dark text-white px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-full bg-white grid place-items-center shadow shrink-0">
-                <BeeMascot size={26} />
+              <div className="w-11 h-11 rounded-full bg-white grid place-items-center shadow shrink-0">
+                <BeeMascot size={34} />
               </div>
               <div className="leading-tight">
                 <div className="text-sm font-semibold">Buzzy &middot; BEE S&amp;L Assistant</div>
@@ -37,13 +37,13 @@ export function ChatWidget() {
       <button
         onClick={toggleChat}
         aria-label={isOpen ? "Close chat assistant" : "Open chat assistant"}
-        className={`relative w-16 h-16 rounded-full shadow-cardhover grid place-items-center hover:scale-105 active:scale-95 transition-transform ${
+        className={`relative w-20 h-20 rounded-full shadow-cardhover grid place-items-center hover:scale-105 active:scale-95 transition-transform ${
           isOpen ? "bg-gradient-to-br from-gt-purple to-gt-teal text-white" : "bg-white border-2 border-gt-teal-light/60"
         }`}
       >
         {!isOpen && <span className="absolute inset-0 rounded-full bg-gt-teal/50 animate-ping" />}
         <span className="relative">
-          {isOpen ? <X size={24} /> : <BeeMascot size={42} />}
+          {isOpen ? <X size={28} /> : <BeeMascot size={58} />}
         </span>
         {!isOpen && unread > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-bad text-white text-[11px] font-bold grid place-items-center shadow">
